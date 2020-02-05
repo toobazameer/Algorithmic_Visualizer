@@ -24,6 +24,7 @@ function Board(height, width) {
   this.start = null;
   this.target = null;
   this.object = null;
+    // only Equated to 1.currentId 2. ObjectNodeId which id string "x-y".
   this.boardArray = [];
   this.nodes = {};
   this.nodesToAnimate = [];
