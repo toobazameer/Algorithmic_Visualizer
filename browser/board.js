@@ -107,6 +107,9 @@ Board.prototype.getNode = function(id) {
 // Removing all the walls
 Board.prototype.clearWalls = function() {
   this.clearPath("clickedButton");
+  // Object.keys(object_name) returns all the attributes of object one by one in similar fashion to a loop.
+  // .forEach(id => .... Now id will take values of all the attributes od "node" object
+  // i.e. id, status, previousNode, etc. one by one.
   Object.keys(this.nodes).forEach(id => {
     let currentNode = this.nodes[id];
     let currentHTMLNode = document.getElementById(id);
