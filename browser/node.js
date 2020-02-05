@@ -1,6 +1,8 @@
 function Node(id, status) {
   this.id = id;
   this.status = status;
+    // Refers to element.className of HTML element, can assume values - "wall","unvisited","unvisited weight",
+    // (may be "visited" also, yet to be checked)
   this.previousNode = null;
   this.path = null;
   this.direction = null;
