@@ -15,6 +15,8 @@ const simpleDemonstration = require("./mazeAlgorithms/simpleDemonstration");
 const bidirectional = require("./pathfindingAlgorithms/bidirectional");
 const getDistance = require("./getDistance");
 
+let wall_weight = 15 // That's the default weight we are taking for now.
+
 //Necessary Additions, ERach individual element's contri yet to be figured out.
 function Board(height, width) {
   this.height = height;
@@ -87,6 +89,34 @@ Board.prototype.getNode = function(id) {
   let c = parseInt(coordinates[1]);
   return this.boardArray[r][c];
 };
+
+/////////////////////////////////////////////
+// SIMPLE FUNCTIONALITIES AFTER THIS POINT //
+/////////////////////////////////////////////
+
+// Board.prototype.getNode() is a simple function to extract node coordinates used at various places.
+Board.prototype.getNode = function(id) {
+  // will convert "x-y" to board[x][y]
+  let coordinates = id.split("-");
+  let r = parseInt(coordinates[0]);
+  let c = parseInt(coordinates[1]);
+  return this.boardArray[r][c];
+};
+
+// Removing all the walls
+Board.prototype.clearWalls = function() {
+  this.clearPath("clickedButton");
+  Object.keys(this.nodes).forEach(id => {
+    let currentNode = this.nodes[id];
+    let currentHTMLNode = document.getElementById(id);
+    // Set all the walls and weighted nodes to unvisited.
+    if (currentNode.status === "wall" || currentNode.weight === wall_weight) {
+      currentNode.status = "unvisited";
+      currentNode.weight = 0;
+      currentHTMLNode.className = "unvisited";
+    }
+  });
+}
 
 
 
