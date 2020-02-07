@@ -15,6 +15,9 @@ const simpleDemonstration = require("./mazeAlgorithms/simpleDemonstration");
 const bidirectional = require("./pathfindingAlgorithms/bidirectional");
 const getDistance = require("./getDistance");
 
+var global_weight = 5;
+  // we will use this instead of 15, because in practice, 15 acts as a wall and dificult to penetrate.
+ 
 //Necessary Additions, ERach individual element's contri yet to be figured out.
 function Board(height, width) {
   this.height = height;
@@ -85,6 +88,33 @@ Board.prototype.createGrid = function() {
   board.innerHTML = tableHTML;
 };
 
+// CHANGE NORMAL NODE. Works in weird ways. Basic functionality is to change an empty block to wall and wall to empty.
+// In cases where we register "W" keydown and press on a block while weighted algos are selected, it uses weights
+// instead of walls.
+// This will be included in AddEvenetListner Function.
+Board.prototype.changeNormalNode = function(currentNode) {
+  let element = document.getElementById(currentNode.id);
+  let relevantStatuses = ["start", "target", "object"];
+  let unweightedAlgorithms = ["dfs", "bfs"]
+  if (!this.keyDown) {
+    if (!relevantStatuses.includes(currentNode.status)) {
+      element.className = currentNode.status !== "wall" ?
+        "wall" : "unvisited";
+      currentNode.status = element.className !== "wall" ?
+        "unvisited" : "wall";
+      currentNode.weight = 0;
+    }
+  } else if (this.keyDown === 87 && !unweightedAlgorithms.includes(this.currentAlgorithm)) {
+    if (!relevantStatuses.includes(currentNode.status)) {
+      element.className = currentNode.weight !== global_weight ?
+        "unvisited weight" : "unvisited";
+      currentNode.weight = element.className !== "unvisited weight" ?
+        0 : global_weight;
+      currentNode.status = "unvisited";
+    }
+  }
+};
+
 /////////////////////////////////////////////
 // SIMPLE FUNCTIONALITIES AFTER THIS POINT //
 /////////////////////////////////////////////
@@ -108,7 +138,7 @@ Board.prototype.clearWalls = function() {
     let currentNode = this.nodes[id];
     let currentHTMLNode = document.getElementById(id);
     // Set all the walls and weighted nodes to unvisited.
-    if (currentNode.status === "wall" || currentNode.weight === 15) {
+    if (currentNode.status === "wall" || currentNode.weight === global_weight) {
       currentNode.status = "unvisited";
       currentNode.weight = 0;
       currentHTMLNode.className = "unvisited";
@@ -121,7 +151,7 @@ Board.prototype.clearWeights = function() {
   Object.keys(this.nodes).forEach(id => {
     let currentNode = this.nodes[id];
     let currentHTMLNode = document.getElementById(id);
-    if (currentNode.weight === 15) {
+    if (currentNode.weight === global_weight) {
       currentNode.status = "unvisited";
       currentNode.weight = 0;
       currentHTMLNode.className = "unvisited";
@@ -160,7 +190,7 @@ let width = Math.floor($(document).width() / 25);
 let newBoard = new Board(height, width)
 newBoard.initialise();
 
-// For weights
+// For adding weights, press w, and keeping it pressed, select a node, and then go on adding weights normally.
 window.onkeydown = (e) => {
   newBoard.keyDown = e.keyCode;
 }
