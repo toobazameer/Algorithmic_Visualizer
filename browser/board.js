@@ -15,8 +15,6 @@ const simpleDemonstration = require("./mazeAlgorithms/simpleDemonstration");
 const bidirectional = require("./pathfindingAlgorithms/bidirectional");
 const getDistance = require("./getDistance");
 
-let wall_weight = 15 // That's the default weight we are taking for now.
-
 //Necessary Additions, ERach individual element's contri yet to be figured out.
 function Board(height, width) {
   this.height = height;
@@ -27,6 +25,10 @@ function Board(height, width) {
     // only Equated to 1.currentId 2. ObjectNodeId which id string "x-y".
   this.boardArray = [];
   this.nodes = {};
+    // Empty Object, relating string to nodes.
+    //new Node(newNodeId, newNodeClass);
+    //this.nodes[`${newNodeId}`] = newNode;
+    // Relates "x-y" to Board[x][y], and maintain list of nodes on which we have to operate after a while.
   this.nodesToAnimate = [];
   this.objectNodesToAnimate = [];
   this.shortestPathNodesToAnimate = [];
@@ -42,6 +44,7 @@ function Board(height, width) {
   this.currentAlgorithm = null;
   this.currentHeuristic = null;
   this.numberOfObjects = 0;
+    //  Only on ewhen we add a Bomb. Not using it for now.
   this.isObject = false;
   this.buttonsOn = false;
   this.speed = "fast";
@@ -105,13 +108,32 @@ Board.prototype.clearWalls = function() {
     let currentNode = this.nodes[id];
     let currentHTMLNode = document.getElementById(id);
     // Set all the walls and weighted nodes to unvisited.
-    if (currentNode.status === "wall" || currentNode.weight === wall_weight) {
+    if (currentNode.status === "wall") {
       currentNode.status = "unvisited";
       currentNode.weight = 0;
       currentHTMLNode.className = "unvisited";
     }
   });
 }
+
+// Clearing Path. We have to reset some status.
+Board.prototype.clearPath = function(clickedButton) {
+  if (clickedButton) {
+    let start = this.nodes[this.start];
+    let target = this.nodes[this.target];
+    let object = this.numberOfObjects ? this.nodes[this.object] : null;
+      // object will be null as -> no_of_obj is 0 as -> we are not using bombs.
+    start.status = "start";
+    document.getElementById(start.id).className = "start";
+    target.status = "target";
+    document.getElementById(target.id).className = "target";
+    if (object) {
+      object.status = "object";
+      document.getElementById(object.id).className = "object";
+      // If any object remain, except for path, we should maintain them. In this case there will not be any.
+      // (because no bomb implementation for now)
+    }
+  }
 
 
 //////////////////////////
