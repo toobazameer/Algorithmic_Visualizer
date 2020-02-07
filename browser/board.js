@@ -16,9 +16,9 @@ const bidirectional = require("./pathfindingAlgorithms/bidirectional");
 const getDistance = require("./getDistance");
 
 var global_weight = 5;
-  // we will use this instead of 15, because in practice, 15 acts as a wall and dificult to penetrate.
+  // we will use this instead of 15, because in practice, 15 acts as a wall and difficult to penetrate.
  
-//Necessary Additions, ERach individual element's contri yet to be figured out.
+//Necessary Additions, Each individual element's contri yet to be figured out.
 function Board(height, width) {
   this.height = height;
   this.width = width;
@@ -27,27 +27,29 @@ function Board(height, width) {
   this.object = null;
     // only Equated to 1.currentId 2. ObjectNodeId which id string "x-y".
   this.boardArray = [];
+  //each node after creation gets added into the array
   this.nodes = {};
     // Empty Object, relating string to nodes.
     //new Node(newNodeId, newNodeClass);
     //this.nodes[`${newNodeId}`] = newNode;
     // Relates "x-y" to Board[x][y], and maintain list of nodes on which we have to operate after a while.
-  this.nodesToAnimate = [];
+  this.nodesToAnimate = []; 
   this.objectNodesToAnimate = [];
   this.shortestPathNodesToAnimate = [];
   this.objectShortestPathNodesToAnimate = [];
   this.wallsToAnimate = [];
-  this.mouseDown = false;
+  this.mouseDown = false; 
   this.pressedNodeStatus = "normal";
   this.previouslyPressedNodeStatus = null;
   this.previouslySwitchedNode = null;
   this.previouslySwitchedNodeWeight = 0;
   this.keyDown = false;
+  //for adding weight with W key press 
   this.algoDone = false;
   this.currentAlgorithm = null;
   this.currentHeuristic = null;
   this.numberOfObjects = 0;
-    //  Only on ewhen we add a Bomb. Not using it for now.
+    //  Only on when we add a Bomb. Not using it for now.
   this.isObject = false;
   this.buttonsOn = false;
   this.speed = "fast";
@@ -77,6 +79,7 @@ Board.prototype.createGrid = function() {
         newNodeClass = "unvisited";
       }
       newNode = new Node(newNodeId, newNodeClass);
+      //node created using node.js one by one for the grid
       currentArrayRow.push(newNode);
       currentHTMLRow += `<td id="${newNodeId}" class="${newNodeClass}"></td>`;
       this.nodes[`${newNodeId}`] = newNode;
@@ -114,6 +117,168 @@ Board.prototype.changeNormalNode = function(currentNode) {
     }
   }
 };
+
+//Add event listeners check for the event based on the clicked node status and the operations which can be performed.
+ //mousedown defines the status of the clicked node is either one from start, target or object
+ //otherwise a wall or empty into the pressednodeStatus
+//on mouseup the node convert into the previously selected node i.e. start/target/object id moved by user
+//and recalculate for new values of changed node
+
+Board.prototype.addEventListeners = function() {
+  let board = this;
+  for (let r = 0; r < board.height; r++) {
+    for (let c = 0; c < board.width; c++) {
+      let currentId = `${r}-${c}`;
+      let currentNode = board.getNode(currentId); 
+      //x y coordinates in current node
+      let currentElement = document.getElementById(currentId);
+      currentElement.onmousedown = (e) => {
+        e.preventDefault();
+        if (this.buttonsOn) {
+          board.mouseDown = true;
+          if (currentNode.status === "start" || currentNode.status === "target" || currentNode.status === "object") {
+            board.pressedNodeStatus = currentNode.status;
+          } else {
+            board.pressedNodeStatus = "normal";
+            board.changeNormalNode(currentNode);
+          }
+        }
+      }
+      currentElement.onmouseup = () => {
+        if (this.buttonsOn) {
+          board.mouseDown = false;
+          if (board.pressedNodeStatus === "target") {
+            board.target = currentId;
+          } else if (board.pressedNodeStatus === "start") {
+            board.start = currentId;
+          } else if (board.pressedNodeStatus === "object") {
+            board.object = currentId;
+          }
+          board.pressedNodeStatus = "normal";
+        }
+      }
+      currentElement.onmouseenter = () => {
+        if (this.buttonsOn) {
+          if (board.mouseDown && board.pressedNodeStatus !== "normal") {
+            board.changeSpecialNode(currentNode);
+            if (board.pressedNodeStatus === "target") {
+              board.target = currentId;
+              if (board.algoDone) {
+                board.redoAlgorithm();
+              }
+            } else if (board.pressedNodeStatus === "start") {
+              board.start = currentId;
+              if (board.algoDone) {
+                board.redoAlgorithm();
+              }
+            } else if (board.pressedNodeStatus === "object") {
+              board.object = currentId;
+              if (board.algoDone) {
+                board.redoAlgorithm();
+              }
+            }
+          } else if (board.mouseDown) {
+            board.changeNormalNode(currentNode);
+          }
+        }
+      }
+      currentElement.onmouseleave = () => {
+        if (this.buttonsOn) {
+          if (board.mouseDown && board.pressedNodeStatus !== "normal") {
+            board.changeSpecialNode(currentNode);
+          }
+        }
+      }
+    }
+  }
+};
+
+//called in addeventlistener to finally swap the special node,status with the selected node
+//if they are weighted then weight and its type is to be switched, and check for the algo done status.
+
+Board.prototype.changeSpecialNode = function(currentNode) {
+  let element = document.getElementById(currentNode.id), previousElement;
+  if (this.previouslySwitchedNode) previousElement = document.getElementById(this.previouslySwitchedNode.id);
+  if (currentNode.status !== "target" && currentNode.status !== "start" && currentNode.status !== "object") {
+    if (this.previouslySwitchedNode) {
+      this.previouslySwitchedNode.status = this.previouslyPressedNodeStatus;
+      previousElement.className = this.previouslySwitchedNodeWeight === 5 ?
+      "unvisited weight" : this.previouslyPressedNodeStatus;
+      this.previouslySwitchedNode.weight = this.previouslySwitchedNodeWeight === 5 ?
+      5 : 0;
+      this.previouslySwitchedNode = null;
+      this.previouslySwitchedNodeWeight = currentNode.weight;
+
+      this.previouslyPressedNodeStatus = currentNode.status;
+      element.className = this.pressedNodeStatus;
+      currentNode.status = this.pressedNodeStatus;
+
+      currentNode.weight = 0;
+    }
+  } else if (currentNode.status !== this.pressedNodeStatus && !this.algoDone) {
+    this.previouslySwitchedNode.status = this.pressedNodeStatus;
+    previousElement.className = this.pressedNodeStatus;
+  } else if (currentNode.status === this.pressedNodeStatus) {
+    this.previouslySwitchedNode = currentNode;
+    element.className = this.previouslyPressedNodeStatus;
+    currentNode.status = this.previouslyPressedNodeStatus;
+  }
+};
+
+//to reclaculate value if node position is changed
+Board.prototype.redoAlgorithm = function() {
+  this.clearPath();
+  this.instantAlgorithm();
+};
+
+//check for the selected algorithm and execute it with new nodes values.
+//all algorithms are categories and choosen one will get matched and generate new results.
+Board.prototype.instantAlgorithm = function() {
+  let weightedAlgorithms = ["dijkstra", "CLA", "greedy"];
+  let unweightedAlgorithms = ["dfs", "bfs"];
+  let success;
+  if (this.currentAlgorithm === "bidirectional") {
+    if (!this.numberOfObjects) {
+      success = bidirectional(this.nodes, this.start, this.target, this.nodesToAnimate, this.boardArray, this.currentAlgorithm, this.currentHeuristic, this);
+      launchInstantAnimations(this, success, "weighted");
+    } else {
+      this.isObject = true;
+    }
+    this.algoDone = true;
+  } else if (this.currentAlgorithm === "astar") {
+    if (!this.numberOfObjects) {
+      success = weightedSearchAlgorithm(this.nodes, this.start, this.target, this.nodesToAnimate, this.boardArray, this.currentAlgorithm, this.currentHeuristic);
+      launchInstantAnimations(this, success, "weighted");
+    } else {
+      this.isObject = true;
+      success = weightedSearchAlgorithm(this.nodes, this.start, this.object, this.objectNodesToAnimate, this.boardArray, this.currentAlgorithm, this.currentHeuristic);
+      launchInstantAnimations(this, success, "weighted", "object", this.currentAlgorithm);
+    }
+    this.algoDone = true;
+  }
+  if (weightedAlgorithms.includes(this.currentAlgorithm)) {
+    if (!this.numberOfObjects) {
+      success = weightedSearchAlgorithm(this.nodes, this.start, this.target, this.nodesToAnimate, this.boardArray, this.currentAlgorithm, this.currentHeuristic);
+      launchInstantAnimations(this, success, "weighted");
+    } else {
+      this.isObject = true;
+      success = weightedSearchAlgorithm(this.nodes, this.start, this.object, this.objectNodesToAnimate, this.boardArray, this.currentAlgorithm, this.currentHeuristic);
+      launchInstantAnimations(this, success, "weighted", "object", this.currentAlgorithm, this.currentHeuristic);
+    }
+    this.algoDone = true;
+  } else if (unweightedAlgorithms.includes(this.currentAlgorithm)) {
+    if (!this.numberOfObjects) {
+      success = unweightedSearchAlgorithm(this.nodes, this.start, this.target, this.nodesToAnimate, this.boardArray, this.currentAlgorithm);
+      launchInstantAnimations(this, success, "unweighted");
+    } else {
+      this.isObject = true;
+      success = unweightedSearchAlgorithm(this.nodes, this.start, this.object, this.objectNodesToAnimate, this.boardArray, this.currentAlgorithm);
+      launchInstantAnimations(this, success, "unweighted", "object", this.currentAlgorithm);
+    }
+    this.algoDone = true;
+  }
+};
+
 
 /////////////////////////////////////////////
 // SIMPLE FUNCTIONALITIES AFTER THIS POINT //
