@@ -108,7 +108,20 @@ Board.prototype.clearWalls = function() {
     let currentNode = this.nodes[id];
     let currentHTMLNode = document.getElementById(id);
     // Set all the walls and weighted nodes to unvisited.
-    if (currentNode.status === "wall") {
+    if (currentNode.status === "wall" || currentNode.weight === 15) {
+      currentNode.status = "unvisited";
+      currentNode.weight = 0;
+      currentHTMLNode.className = "unvisited";
+    }
+  });
+}
+
+// To Clear Weights only
+Board.prototype.clearWeights = function() {
+  Object.keys(this.nodes).forEach(id => {
+    let currentNode = this.nodes[id];
+    let currentHTMLNode = document.getElementById(id);
+    if (currentNode.weight === 15) {
       currentNode.status = "unvisited";
       currentNode.weight = 0;
       currentHTMLNode.className = "unvisited";
@@ -147,7 +160,14 @@ let width = Math.floor($(document).width() / 25);
 let newBoard = new Board(height, width)
 newBoard.initialise();
 
+// For weights
+window.onkeydown = (e) => {
+  newBoard.keyDown = e.keyCode;
+}
 
+window.onkeyup = (e) => {
+  newBoard.keyDown = false;
+}
 
 
 
