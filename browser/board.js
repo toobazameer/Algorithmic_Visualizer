@@ -232,7 +232,7 @@ Board.prototype.redoAlgorithm = function() {
 };
 
 //check for the selected algorithm and execute it with new nodes values.
-//all algorithms are categories and choosen one will get matched and generate new results.
+//all algorithms are categories and chosen one will get selected and produce new results.
 Board.prototype.instantAlgorithm = function() {
   let weightedAlgorithms = ["dijkstra", "CLA", "greedy"];
   let unweightedAlgorithms = ["dfs", "bfs"];
@@ -363,6 +363,3 @@ window.onkeydown = (e) => {
 window.onkeyup = (e) => {
   newBoard.keyDown = false;
 }
-
-
-
