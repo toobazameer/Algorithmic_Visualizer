@@ -114,4 +114,18 @@ Board.prototype.clearWalls = function() {
 }
 
 
+//////////////////////////
+// Board initialisation //
+//////////////////////////
+
+let navbarHeight = $("#navbarDiv").height();
+let textHeight = $("#mainText").height() + $("#algorithmDescriptor").height();
+let height = Math.floor(($(document).height() - navbarHeight - textHeight) / 28);
+let width = Math.floor($(document).width() / 25);
+let newBoard = new Board(height, width)
+newBoard.initialise();
+
+
+
+
 
