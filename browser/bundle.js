@@ -1,4 +1,4 @@
-//understood common part
+//understood common part, all the other implementations yet to be included for displaying and working
 function(require,module,exports){
 const Node = require("./node");
 const launchAnimations = require("./animations/launchAnimations");
